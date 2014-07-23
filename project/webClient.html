@@ -1,0 +1,143 @@
+<html>
+    <head>
+	<style>
+	.result {
+    position: fixed;
+    bottom: 50px;
+    top: 100 px;
+    left: 100px;
+   }
+	</style>
+        <title>Client</title>
+		
+    </head>
+	
+	<body topmargin="50">
+        <h1 align = "middle">WebClient</h1>
+		
+		<!--Form for client authorization-->
+			<table id = "sighForm" align= "center"  border="0" >
+			<tr height = "50">
+			<td><b>Login: </b></td>
+			<td align= "center" height = "5" ><input  type = "text" id = "login" size="15"/> </td>	
+			</tr>
+			<tr>
+			<td><b>Password: </b></td>
+			<td align = "center"><input type = "password" id = "password" size="15" /></td>
+			</tr>
+			<tr>
+			<td align = "center"><button onClick = "sendAuthorizInfo();" > Sign In </button></td>
+			</tr>
+			</table>
+
+            <textarea id="resultTextArea" style="width:400px;height:200px;" class = "result"></textarea>
+        
+		
+
+		<script type="text/javascript">
+		
+		var resultTextArea = document.getElementById("resultTextArea");
+		
+		/*function for putting the result of actions into textarea on web page*/
+            function setTextResult(message) {
+                resultTextArea.value += message + "\n";
+                resultTextArea.scrollTop = resultTextArea.scrollHeight;
+            }
+			
+		/*function for choosing appropriate form depending on clients right */
+            function onAuthorization(message) {
+                if(message.charAt(0) == '1')
+				{
+				admin.style.display = "table";
+				}
+            }
+
+		/*function for sending login and password to server*/
+            function sendAuthorizInfo() {
+			if(document.getElementById("login").value == "" || document.getElementById("password").value == "")
+			{
+				alert("Please enter login and password first");
+				return;
+			}
+			
+                var msg = document.getElementById("login").value + "|" + document.getElementById("password").value;
+                if ( websocket != null )
+                {
+                    document.getElementById("login").value = "";
+					document.getElementById("password").value = "";
+                    websocket.send( msg );
+                }
+				sighForm.style.display = "none";
+            }
+
+            var websocketURI = "ws://localhost:80";		//URI - Uniform Resource Identifier
+            var websocket = null;
+
+			
+            function Connection() {
+                try {
+                    if ( websocket && websocket.readyState == 1 ) //attribute readyState represents the state of the connection
+						websocket.close();						//A value of 1 indicates that the connection is established and communication is possible.
+                        
+                    websocket = new WebSocket( websocketURI );
+					
+                    websocket.onopen = function (evt) {
+                        setTextResult("CONNECTED");
+                    };
+                    websocket.onclose = function (evt) {
+                        setTextResult("DISCONNECTED");
+                    };
+                    websocket.onmessage = function (evt) {
+                        setTextResult( evt.data );
+						onAuthorization(evt.data);
+                    };
+                    websocket.onerror = function (evt) {
+                        setTextResult('ERROR: ' + evt.data);
+                    };
+                } 
+				catch (exception) {
+                    setTextResult('ERROR: ' + exception);
+                }
+            }
+
+            function stopWebSocket() {
+                if (websocket)
+                    websocket.close();
+            }
+
+			function loadVideo()
+			{
+			var reader = new FileReader();
+			reader.readAsArrayBuffer(document.getElementById("path").value);
+			websocket.send(reader);
+				
+			}
+			
+		</script>
+		<script>
+            Connection();
+        </script>
+		<table id = "admin" align= "center" style="display:none" border="0"  >
+			<tr>
+				<td align = "center">
+				<input type="file" id="file" name="files"  accept="video/*">
+				<output name = "path"></output>
+				</td>
+				
+				<td align = "center"><button onClick = "loadVideo();" > Load Video</button></td>
+
+				
+			</tr>
+			<tr>
+				<td align = "center"><button onClick = "seeHistory();" > See User's History </button></td>
+			</tr>
+			<tr>
+				<td align = "center"><button onClick = "addUser();" > Add New User </button></td>
+			</tr>
+			<tr>
+				<td align = "center"><button onClick = "addPicture();" > Add New Picture </button></td>
+			</tr>
+			</table>
+		
+	</body>	
+<html>
